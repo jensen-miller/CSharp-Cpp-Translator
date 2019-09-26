@@ -24,7 +24,7 @@ namespace CS_CPP_Translator
 {
     class Program
     {
-        const string ProjectDir = "../examples/basic";
+        const string ProjectDir = "..\\..\\examples\\basic";
 
 
         /// <summary>

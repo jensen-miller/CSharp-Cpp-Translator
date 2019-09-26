@@ -1,13 +1,12 @@
 #include <System.h>
 
-namespace Sample
+namespace SampleProject
 {
 	class Program
 {
-public:
 static void Main()
 {
-Console::WriteLine("Hello World!");
+
 }
 
 };
