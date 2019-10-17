@@ -65,12 +65,12 @@ namespace CsCppTranslator
 
             //  Generate output or serialize compile unit
             //
-            System.IO.Directory.CreateDirectory(projectDir + "\\out");
+            System.IO.Directory.CreateDirectory(projectDir + "\\src");
             if (flags.GenerateOutput)
             {
                 StringBuilder sourceCode = CPPCodeGenerator.GenerateCode(rootNode);
                 AddMainEntry(sourceCode, "BlinkSample", "Program", "Main");
-                System.IO.File.WriteAllText(projectDir + "\\out\\program.cpp", sourceCode.ToString());
+                System.IO.File.WriteAllText(projectDir + "\\src\\program.cpp", sourceCode.ToString());
 
             }
             else

@@ -66,6 +66,7 @@ namespace CsCppTranslator
             CPPCodeGenerator newCodeGenerator = new CPPCodeGenerator();
             newCodeGenerator.symbolTable.AddStaticObjectIdentifier("Thread");
             newCodeGenerator.symbolTable.AddStaticObjectIdentifier("PinMode");
+            newCodeGenerator.symbolTable.AddStaticObjectIdentifier("PinValue");
             return syntaxNode.Accept(newCodeGenerator);            
         }
 
@@ -211,17 +212,20 @@ namespace CsCppTranslator
                 switch (modifier.Kind())
                 {
                     case SyntaxKind.PublicKeyword:
-                        modifierBuilder.Insert(0, "public:\r\n");
+                        modifierBuilder.Insert(0, "public:\r\n" + Indent());
                         break;
                     case SyntaxKind.PrivateKeyword:
-                        modifierBuilder.Insert(0, "private:\r\n");
+                        modifierBuilder.Insert(0, "private:\r\n" + Indent());
                         break;
                     case SyntaxKind.InternalKeyword:                                                
                     case SyntaxKind.ProtectedKeyword:
-                        modifierBuilder.Insert(0, "protected:\r\n");
+                        modifierBuilder.Insert(0, "protected:\r\n" + Indent());
                         break;
                     case SyntaxKind.StaticKeyword:
                         modifierBuilder.Append("static");
+                        break;
+                    case SyntaxKind.ConstKeyword:
+                        modifierBuilder.Append("const");
                         break;
                     default:
                         break;
@@ -787,7 +791,7 @@ namespace CsCppTranslator
         {
             return new StringBuilder().AppendFormat(
                 "{0} {1}\r\n",
-                node.Modifiers.First().Value,
+                ProcessMethodModifiers(node.Modifiers),                
                 node.Declaration.Accept(this)
             );
         }
@@ -958,7 +962,11 @@ namespace CsCppTranslator
 
         public override StringBuilder VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node)
         {
-            return node.Declaration.Accept(this);
+            return new StringBuilder().AppendFormat(
+                "{0} {1}",
+                ProcessMethodModifiers(node.Modifiers),
+                node.Declaration.Accept(this)
+            );
         }
 
         public override StringBuilder VisitLocalFunctionStatement(LocalFunctionStatementSyntax node)
@@ -1352,7 +1360,7 @@ namespace CsCppTranslator
             }
             variable_instances.Remove(variable_instances.Length-2, 2);
             return new StringBuilder().AppendFormat(
-                "{0} {1};",
+                "{0} {1};",                
                 node.Type.Accept(this),
                 variable_instances
             );
