@@ -13,25 +13,25 @@ using System.Threading;
 namespace BlinkSample
 {
     class Program
-    {
-        const int ledPin = 17;
-        const int lightTimeInMilliseconds = 1000;
-        const int dimTimeInMillisecons = 200;
-
-        static void Main()
+    {                
+        public static void Main()
         {
+            const int LedPin = 17;
+            const int LightTimeInMilliseconds = 1000;
+            const int DimTimeInMilliseconds = 200;
+
             //  Get an instance of the GPIO controller
             GpioController controller = new GpioController();
 
             //  Open the pin for IO
-            controller.OpenPin(ledPin, PinMode.Output);
+            controller.OpenPin(LedPin, PinMode.Output);
 
             while(true)
             {
-                controller.Write(ledPin, PinValue.High);
-                Thread.Sleep(lightTimeInMilliseconds);
-                controller.Write(ledPin, PinValue.Low);
-                Thread.Sleep(dimTimeInMillisecons);
+                controller.Write(LedPin, PinValue.High);
+                Thread.Sleep(LightTimeInMilliseconds);
+                controller.Write(LedPin, PinValue.Low);
+                Thread.Sleep(DimTimeInMilliseconds);
             }
         }
     }
@@ -51,22 +51,20 @@ namespace BlinkSample
 {
 	class Program
 	{
-		const int ledPin = 17;
-
-		const int lightTimeInMilliseconds = 1000;
-
-		const int dimTimeInMillisecons = 200;
-
+		public:
 		static void Main()
 		{
+			const int LedPin = 17;
+			const int LightTimeInMilliseconds = 1000;
+			const int DimTimeInMilliseconds = 200;
 			GpioController controller = new GpioController();
-			controller.OpenPin(ledPin, PinMode::Output);
+			controller.OpenPin(LedPin, PinMode::Output);
 			while (true)
 			{
-				controller.Write(ledPin, PinValue.High);
-				Thread::Sleep(lightTimeInMilliseconds);
-				controller.Write(ledPin, PinValue.Low);
-				Thread::Sleep(dimTimeInMillisecons);
+				controller.Write(LedPin, PinValue::High);
+				Thread::Sleep(LightTimeInMilliseconds);
+				controller.Write(LedPin, PinValue::Low);
+				Thread::Sleep(DimTimeInMilliseconds);
 			}
 		}
 
@@ -74,11 +72,20 @@ namespace BlinkSample
 
 }
 
+
+int main()
+{
+	BlinkSample::Program::Main();
+}
+
 ```
 
 
 ## To-Do
 
-- [ ] Format output for better reading.
+- [ ] Collect code heuristics.
+- [ ] Output is Compiling.
+- [x] Format output for better reading.
 - [ ] Finish all visitors.
-- [ ] Command line parsing of arguments.
+- [x] Command line parsing of arguments.
+- [ ] Advanced command line arguments.

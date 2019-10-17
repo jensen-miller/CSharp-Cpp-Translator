@@ -61,7 +61,7 @@ namespace IoTDotNet
             System.IO.Directory.CreateDirectory(projectDir + "\\out");
             if (flags.GenerateOutput)
             {
-                System.IO.File.WriteAllText(projectDir + "\\out\\program.cpp", CPPCodeGenerator.GenerateCode(rootNode).ToString());
+                System.IO.File.WriteAllText(projectDir + "\\src\\program.cpp", CPPCodeGenerator.GenerateCode(rootNode).ToString());
             }
             else
             {
