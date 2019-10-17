@@ -29,3 +29,10 @@ namespace BlinkSample
 	};
 
 }
+
+
+
+int main()
+{
+	BlinkSample::Program::Main();
+}

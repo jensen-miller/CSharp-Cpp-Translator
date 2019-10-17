@@ -68,12 +68,26 @@ namespace CsCppTranslator
             System.IO.Directory.CreateDirectory(projectDir + "\\out");
             if (flags.GenerateOutput)
             {
-                System.IO.File.WriteAllText(projectDir + "\\out\\program.cpp", CPPCodeGenerator.GenerateCode(rootNode).ToString());
+                StringBuilder sourceCode = CPPCodeGenerator.GenerateCode(rootNode);
+                AddMainEntry(sourceCode, "BlinkSample", "Program", "Main");
+                System.IO.File.WriteAllText(projectDir + "\\out\\program.cpp", sourceCode.ToString());
+
             }
             else
             {
                 rootNode.SerializeTo(System.IO.File.OpenWrite(projectDir + "\\out\\out.cu"));            
             }                                                
+        }
+
+
+        private static void AddMainEntry(StringBuilder sb, string namespaceScope, string className, string entryFnName)
+        {
+            sb.AppendLine("\r\n\r\n");
+            sb.AppendFormat("int main()\r\n{{\r\n\t{0}::{1}::{2}();\r\n}}",
+                namespaceScope,
+                className,
+                entryFnName
+            );
         }
         
 
