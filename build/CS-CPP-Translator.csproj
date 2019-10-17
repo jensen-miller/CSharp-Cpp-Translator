@@ -4,15 +4,51 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <ApplicationIcon>ctranslate_thumbnail_pYZ_icon.ico</ApplicationIcon>
+    <Version>0.6.0</Version>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageProjectUrl>https://github.com/jensen-miller/CSharp-Cpp-Translator</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/jensen-miller/CSharp-Cpp-Translator</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Copyright>2019 Jensen Miller</Copyright>
+    <RootNamespace>CsCppTranslator</RootNamespace>
+    <PackageId>Csharp-Cpp-Translator</PackageId>
+    <Authors>Jensen Miller</Authors>
+    <Company>null</Company>
+    <Product>C# C++ Translator</Product>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>$(SolutionDir)\bin\</OutputPath>
+    <OutputPath>C:\Users\mille\GitHub\jensen-miller\CSharp-Cpp-Translator\bin\</OutputPath>
+    <NoWarn>1701;1702;1305</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.1.0" />
+    <PackageReference Include="CommandLineParser" Version="2.6.0" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.3.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.9.3" />
     <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 
 </Project>

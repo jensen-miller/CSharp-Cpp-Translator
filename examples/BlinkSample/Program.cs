@@ -1,10 +1,4 @@
-# CSharp-Cpp-Translator
-A program for translating C# into C++ for portability (specifically running C# programs on devices that only support C++)
-
-##  Example
-
-``` cs
-using System.Device.Gpio;
+﻿using System.Device.Gpio;
 using System.Threading;
 
 
@@ -37,11 +31,8 @@ namespace BlinkSample
     }
 }
 
-```
 
-=======
-# To-Do
 
-- [ ] Format output for better reading.
-- [ ] Finish all visitors.
-- [ ] Command line parsing of arguments.
+//  References:
+//
+//  https://github.com/dotnet/iot/blob/master/samples/led-blink/README.md
