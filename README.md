@@ -73,7 +73,6 @@ namespace BlinkSample
 }
 
 
-
 int main()
 {
 	BlinkSample::Program::Main();
@@ -81,7 +80,8 @@ int main()
 
 ```
 
-# To-Do
+
+## To-Do
 
 - [ ] Collect code heuristics.
 - [ ] Output is Compiling.
