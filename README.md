@@ -47,6 +47,9 @@ int main()
 =======
 # To-Do
 
-- [ ] Format output for better reading.
+- [ ] Collect code heuristics.
+- [ ] Output is Compiling.
+- [x] Format output for better reading.
 - [ ] Finish all visitors.
-- [ ] Command line parsing of arguments.
+- [x] Command line parsing of arguments.
+- [ ] Advanced command line arguments.
