@@ -16,16 +16,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <https://www.gnu.org/licenses/>
  ******************************************************************************/
-
 using System;
-using System.Collections.Generic;
+using System.IO;
 
-namespace CS_CPP_Translator
+
+
+
+namespace CsCppTranslator
 {
     class Program
     {
-        const string ProjectDir = "..\\..\\examples\\basic";
-
+        /// <summary>
+        /// The compiler switches.
+        /// </summary>
+        static CompilerFlags compilerFlags;
 
         /// <summary>
         /// Main entry point.
@@ -33,9 +37,14 @@ namespace CS_CPP_Translator
         /// <param name="args"></param>
         static void Main(string[] args)
         {
-            CompilerFlags flags = new CompilerFlags();
-            flags.GenerateOutput = true;
-            Compiler.Compile(ProjectDir, flags);
+            Console.WriteLine(Properties.Resources.CL_WELCOME);
+            Console.WriteLine(Properties.Resources.CL_COPYRIGHT);
+
+            string projectSourceDirectory = args[0];
+
+            compilerFlags = CLParser.Parse(args, ref projectSourceDirectory);
+            
+            Compiler.Compile(projectSourceDirectory, compilerFlags);
         }
     }
 }

@@ -27,14 +27,21 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace CS_CPP_Translator
+namespace CsCppTranslator
 {    
     internal class CompilerFlags
     {
-        private bool _generateOutput;
+        private bool generateOutput;
+        private bool verbose;
         public bool GenerateOutput {
-            get { return _generateOutput; }
-            set { _generateOutput = value; }
+            get { return generateOutput; }
+            set { generateOutput = value; }
+        }
+
+        public bool Verbose
+        {
+            get { return verbose; }
+            set { verbose = value; }
         }
     }
 

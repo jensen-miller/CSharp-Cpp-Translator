@@ -21,6 +21,7 @@
 using System;
 
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 using Microsoft.CodeAnalysis;
@@ -29,24 +30,42 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 
 
-namespace CS_CPP_Translator
+namespace CsCppTranslator
 {
     internal class CPPCodeGenerator : CSharpSyntaxVisitor<StringBuilder>
     {
         public const string INCLUDE_DIRECTIVE = "#include";
         public const string DEFINE_DIRECTIVE = "#define";
         public const string NAMESPACE_KEYWORD = "namespace";
+        public const string NEW_KEYWORD = "new";
         public const string CLASS_KEYWORD = "class";
         public const string POINTER_SYM = "*";
+
+        SymbolTable symbolTable = null;
+
+        private int indentationCount = 0;
+
+        private StringBuilder DynamicAllocation(TypeSyntax typeId, ArgumentListSyntax ctorArgs)
+        {
+
+            return new StringBuilder().AppendFormat(
+                "{0} {1}({2})",
+                NEW_KEYWORD,
+                typeId.Accept(this),
+                ctorArgs.Accept(this)
+            );
+        }
         
         protected CPPCodeGenerator()
         {
-            
+            symbolTable = new SymbolTable();
         }
 
         public static StringBuilder GenerateCode(CSharpSyntaxNode syntaxNode)
         {
-            CPPCodeGenerator newCodeGenerator = new CPPCodeGenerator();            
+            CPPCodeGenerator newCodeGenerator = new CPPCodeGenerator();
+            newCodeGenerator.symbolTable.AddStaticObjectIdentifier("Thread");
+            newCodeGenerator.symbolTable.AddStaticObjectIdentifier("PinMode");
             return syntaxNode.Accept(newCodeGenerator);            
         }
 
@@ -74,12 +93,16 @@ namespace CS_CPP_Translator
         /// </summary>
         /// <param name="node"></param>
         public override StringBuilder VisitUsingDirective(UsingDirectiveSyntax node)
-        {            
+        {
+            StringBuilder qualifiedName = node.Name.Accept(this);
+            string namespaceUsing = qualifiedName.ToString();
+
             return new StringBuilder().AppendFormat(
-                "{0} <{1}.h>\r\n",
+                "{0} <{1}.h>\r\nusing namespace {2};\r\n",
                 INCLUDE_DIRECTIVE,
-                node.Name.Accept(this)
-                );
+                qualifiedName.Replace(':', '\\'),
+                namespaceUsing
+            );
         }
 
 
@@ -94,7 +117,12 @@ namespace CS_CPP_Translator
             return new StringBuilder().Append(node.Identifier.Value);
         }
 
-
+        private string Indent(bool increment=false)
+        {
+            string result = String.Concat(Enumerable.Repeat("\t", indentationCount));
+            if (increment) indentationCount++;
+            return result;
+        }        
 
         //
         //  Declarations
@@ -108,9 +136,10 @@ namespace CS_CPP_Translator
         public override StringBuilder VisitNamespaceDeclaration(NamespaceDeclarationSyntax node)
         {
             return new StringBuilder().AppendFormat(
-                "{0} {1}\r\n{{\r\n\t{2}\r\n}}\r\n",
+                "{0} {1}\r\n{2}{{\r\n{3}{2}}}\r\n",                
                 NAMESPACE_KEYWORD,
                 node.Name.Accept(this),
+                Indent(),
                 VisitEachMemberDeclarations(node.Members)
                 );
         }
@@ -125,10 +154,14 @@ namespace CS_CPP_Translator
         private StringBuilder VisitEachMemberDeclarations(SyntaxList<MemberDeclarationSyntax> nodes)
         {
             StringBuilder membersBuilder = new StringBuilder();
+            indentationCount++;
             foreach (MemberDeclarationSyntax member in nodes)
             {
+                membersBuilder.Append(Indent());
                 membersBuilder.Append(member.Accept(this));
+                membersBuilder.AppendLine();
             }
+            indentationCount--;
             return membersBuilder;
         }
 
@@ -142,9 +175,10 @@ namespace CS_CPP_Translator
         public override StringBuilder VisitClassDeclaration(ClassDeclarationSyntax node)
         {
             return new StringBuilder().AppendFormat(
-                "{0} {1}\r\n{{\r\n{2}\r\n}};\r\n",
+                "{0} {1}\r\n{2}{{\r\n{3}{2}}};\r\n",                
                 CLASS_KEYWORD,
                 node.Identifier.ValueText,
+                Indent(),
                 VisitEachMemberDeclarations(node.Members)
                 );
         }
@@ -157,13 +191,14 @@ namespace CS_CPP_Translator
         /// <param name="node"></param>
         /// <returns></returns>
         public override StringBuilder VisitMethodDeclaration(MethodDeclarationSyntax node)
-        {                  
+        {
             return new StringBuilder().AppendFormat(
-                "{0} {1} {2}({3})\r\n{{\r\n{4}\r\n}}\r\n", 
+                "{0} {1} {2}({3})\r\n{4}{{\r\n{5}{4}}}\r\n",
                 ProcessMethodModifiers(node.Modifiers),
                 node.ReturnType.Accept(this),
-                node.Identifier.ValueText,
+                node.Identifier.Value,
                 node.ParameterList.Accept(this),
+                Indent(),
                 node.Body.Accept(this)
                 );
         }
@@ -237,10 +272,10 @@ namespace CS_CPP_Translator
                 foreach (var parameter in node.Parameters)
                 {
                     parameterListBuilder.Append(parameter.Accept(this));
-                    parameterListBuilder.Append(',');
+                    parameterListBuilder.Append(", ");
                 }
                 //  Remove trailing comma
-                parameterListBuilder.Remove(parameterListBuilder.Length - 1, 1);
+                parameterListBuilder.Remove(parameterListBuilder.Length - 2, 2);
             }                   
             return parameterListBuilder;
         }
@@ -255,10 +290,14 @@ namespace CS_CPP_Translator
         public override StringBuilder VisitBlock(BlockSyntax node)
         {
             StringBuilder blockBuilder = new StringBuilder();
+            indentationCount++;
             foreach (var statement in node.Statements)
             {
+                blockBuilder.Append(Indent());
                 blockBuilder.Append(statement.Accept(this));
+                blockBuilder.AppendLine();
             }
+            indentationCount--;
             return blockBuilder;
         }
 
@@ -312,8 +351,18 @@ namespace CS_CPP_Translator
         /// <returns></returns>
         public override StringBuilder VisitMemberAccessExpression(MemberAccessExpressionSyntax node)
         {
-            return new StringBuilder().AppendFormat("{0}::{1}",
-                node.Expression.Accept(this),
+            StringBuilder leftObject = node.Expression.Accept(this);
+            string scope_char = ".";
+
+            //  If the object to the left is static, use static
+            //  scoping rather than instance scoping.
+            if (symbolTable.ContainsSymbol(leftObject.ToString()))
+                scope_char = "::";
+
+
+            return new StringBuilder().AppendFormat("{0}{1}{2}",
+                leftObject,
+                scope_char,
                 node.Name.Accept(this));
         }
 
@@ -332,10 +381,10 @@ namespace CS_CPP_Translator
                 foreach (var arg in node.Arguments)
                 {
                     argumentBuilder.Append(arg.Accept(this));
-                    argumentBuilder.Append(',');
+                    argumentBuilder.Append(", ");
                 }
                 //  Remove trailing comma
-                argumentBuilder.Remove(argumentBuilder.Length - 1, 1);
+                argumentBuilder.Remove(argumentBuilder.Length - 2, 2);
             }
             return argumentBuilder;
         }
@@ -397,10 +446,6 @@ namespace CS_CPP_Translator
             return base.VisitAnonymousObjectMemberDeclarator(node);
         }
 
-
-
-
-
         public override StringBuilder VisitArrayCreationExpression(ArrayCreationExpressionSyntax node)
         {
             return base.VisitArrayCreationExpression(node);
@@ -461,10 +506,10 @@ namespace CS_CPP_Translator
             return base.VisitBaseExpression(node);
         }
 
-        public override StringBuilder VisitBaseExpressionTypeClause(BaseExpressionTypeClauseSyntax node)
-        {
-            return base.VisitBaseExpressionTypeClause(node);
-        }
+        //public override StringBuilder VisitBaseExpressionTypeClause(BaseExpressionTypeClauseSyntax node)
+        //{
+        //    return base.VisitBaseExpressionTypeClause(node);
+        //}
 
         public override StringBuilder VisitBaseList(BaseListSyntax node)
         {
@@ -706,7 +751,11 @@ namespace CS_CPP_Translator
 
         public override StringBuilder VisitEqualsValueClause(EqualsValueClauseSyntax node)
         {
-            return base.VisitEqualsValueClause(node);
+            return new StringBuilder().AppendFormat(
+                "{0} {1}",
+                node.EqualsToken.Value,
+                node.Value.Accept(this)
+            );
         }
 
         public override StringBuilder VisitErrorDirectiveTrivia(ErrorDirectiveTriviaSyntax node)
@@ -736,7 +785,11 @@ namespace CS_CPP_Translator
 
         public override StringBuilder VisitFieldDeclaration(FieldDeclarationSyntax node)
         {
-            return base.VisitFieldDeclaration(node);
+            return new StringBuilder().AppendFormat(
+                "{0} {1}\r\n",
+                node.Modifiers.First().Value,
+                node.Declaration.Accept(this)
+            );
         }
 
         public override StringBuilder VisitFinallyClause(FinallyClauseSyntax node)
@@ -905,7 +958,7 @@ namespace CS_CPP_Translator
 
         public override StringBuilder VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node)
         {
-            return base.VisitLocalDeclarationStatement(node);
+            return node.Declaration.Accept(this);
         }
 
         public override StringBuilder VisitLocalFunctionStatement(LocalFunctionStatementSyntax node)
@@ -955,9 +1008,19 @@ namespace CS_CPP_Translator
             return base.VisitNullableType(node);
         }
 
+
+
+        /// <summary>
+        /// Dynamic Object creation.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
         public override StringBuilder VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
         {
-            return base.VisitObjectCreationExpression(node);
+            return new StringBuilder().AppendFormat(
+                "{0}",
+                DynamicAllocation(node.Type, node.ArgumentList)
+            );
         }
 
         public override StringBuilder VisitOmittedArraySizeExpression(OmittedArraySizeExpressionSyntax node)
@@ -1055,7 +1118,11 @@ namespace CS_CPP_Translator
 
         public override StringBuilder VisitQualifiedName(QualifiedNameSyntax node)
         {
-            return base.VisitQualifiedName(node);
+            return new StringBuilder().AppendFormat(
+                "{0}::{1}",
+                node.Left.Accept(this),
+                node.Right.Accept(this)
+            );
         }
 
         public override StringBuilder VisitQueryBody(QueryBodySyntax node)
@@ -1275,12 +1342,29 @@ namespace CS_CPP_Translator
 
         public override StringBuilder VisitVariableDeclaration(VariableDeclarationSyntax node)
         {
-            return base.VisitVariableDeclaration(node);
+            StringBuilder variable_instances = new StringBuilder();
+            foreach(var variable in node.Variables)
+            {
+                variable_instances.AppendFormat(
+                    "{0}, ",
+                    variable.Accept(this)
+                );
+            }
+            variable_instances.Remove(variable_instances.Length-2, 2);
+            return new StringBuilder().AppendFormat(
+                "{0} {1};",
+                node.Type.Accept(this),
+                variable_instances
+            );
         }
 
         public override StringBuilder VisitVariableDeclarator(VariableDeclaratorSyntax node)
         {
-            return base.VisitVariableDeclarator(node);
+            return new StringBuilder().AppendFormat(
+                "{0} {1}",
+                node.Identifier.Value,
+                node.Initializer.Accept(this)
+            );
         }
 
         public override StringBuilder VisitVarPattern(VarPatternSyntax node)
@@ -1305,7 +1389,13 @@ namespace CS_CPP_Translator
 
         public override StringBuilder VisitWhileStatement(WhileStatementSyntax node)
         {
-            return base.VisitWhileStatement(node);
+            return new StringBuilder().AppendFormat(
+                "{0} ({1})\r\n{2}{{\r\n{3}{2}}}",
+                node.WhileKeyword.Value,
+                node.Condition.Accept(this),
+                Indent(),
+                node.Statement.Accept(this)
+            );
         }
 
         public override StringBuilder VisitXmlCDataSection(XmlCDataSectionSyntax node)

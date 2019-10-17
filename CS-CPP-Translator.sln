@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29306.81
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CS-CPP-Translator", "build\CS-CPP-Translator.csproj", "{DAF32AFC-74F6-4D0B-ACCB-2A965324BF01}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlinkSample", "BlinkSample\BlinkSample.csproj", "{0986D6C7-D05E-4D9A-A14A-454CD5CBFB86}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BlinkSample", "examples\BlinkSample\BlinkSample.csproj", "{BBC4A4A2-9B0F-4644-BC86-80DEE2B4433C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +17,10 @@ Global
 		{DAF32AFC-74F6-4D0B-ACCB-2A965324BF01}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DAF32AFC-74F6-4D0B-ACCB-2A965324BF01}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DAF32AFC-74F6-4D0B-ACCB-2A965324BF01}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0986D6C7-D05E-4D9A-A14A-454CD5CBFB86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0986D6C7-D05E-4D9A-A14A-454CD5CBFB86}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0986D6C7-D05E-4D9A-A14A-454CD5CBFB86}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0986D6C7-D05E-4D9A-A14A-454CD5CBFB86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BBC4A4A2-9B0F-4644-BC86-80DEE2B4433C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BBC4A4A2-9B0F-4644-BC86-80DEE2B4433C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BBC4A4A2-9B0F-4644-BC86-80DEE2B4433C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BBC4A4A2-9B0F-4644-BC86-80DEE2B4433C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
