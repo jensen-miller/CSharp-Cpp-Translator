@@ -9,7 +9,11 @@ namespace System
 	{
 		class Thread
 		{
-		public: static void Sleep(int millisecondsTimeout);
+		public:
+			static inline void Sleep(int millisecondsTimeout)
+			{
+			
+			}
 		};
 	}
 }
