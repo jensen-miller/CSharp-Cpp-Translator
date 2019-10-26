@@ -8,6 +8,22 @@ namespace System
 	{
 		namespace Gpio
 		{
+			//
+			// Summary:
+			//     Different numbering schemes supported by GPIO controllers and drivers.
+			enum class PinNumberingScheme
+			{
+				//
+				// Summary:
+				//     The logical representation of the GPIOs. Refer to the microcontroller's datasheet
+				//     to find this information.
+				Logical = 0,
+				//
+				// Summary:
+				//     The physical pin numbering that is usually accessible by the board headers.
+				Board = 1
+			};
+
 			enum class PinValue
 			{
 				Low,
@@ -28,7 +44,7 @@ namespace System
 				// Summary:
 				//     Initializes a new instance of the System.Device.Gpio.GpioController class that
 				//     will use the logical pin numbering scheme as default.
-				GpioController();
+				GpioController() {}
 				//
 				// Summary:
 				//     Initializes a new instance of the System.Device.Gpio.GpioController class that
@@ -50,16 +66,16 @@ namespace System
 				//
 				//   driver:
 				//     The driver that manages all of the pin operations for the controller.
-				GpioController(PinNumberingScheme numberingScheme, GpioDriver driver);
+				//GpioController(PinNumberingScheme numberingScheme, GpioDriver driver);
 
 				//
 				// Summary:
 				//     The numbering scheme used to represent pins provided by the controller.
-				PinNumberingScheme NumberingScheme{ get; }
+				//PinNumberingScheme NumberingScheme{ get; }
 					//
 					// Summary:
 					//     The number of pins provided by the controller.
-				int PinCount{ get; }
+				//int PinCount{ get; }
 
 					//
 					// Summary:
@@ -114,7 +130,10 @@ namespace System
 				// Parameters:
 				//   pinNumber:
 				//     The pin number in the controller's numbering scheme.
-				void OpenPin(int pinNumber);
+				inline void OpenPin(int pinNumber)
+				{
+				
+				}
 				//
 				// Summary:
 				//     Opens a pin and sets it to a specific mode.
@@ -125,7 +144,10 @@ namespace System
 				//
 				//   mode:
 				//     The mode to be set.
-				void OpenPin(int pinNumber, PinMode mode);
+				inline void OpenPin(int pinNumber, PinMode mode)
+				{
+					
+				}
 				//
 				// Summary:
 				//     Read the given pins with the given pin numbers.
@@ -133,7 +155,7 @@ namespace System
 				// Parameters:
 				//   pinValuePairs:
 				//     The pin/value pairs to read.
-				void Read(Span<PinValuePair> pinValuePairs);
+				//void Read(Span<PinValuePair> pinValuePairs);
 				//
 				// Summary:
 				//     Reads the current value of a pin.
@@ -158,7 +180,7 @@ namespace System
 				//
 				//   callback:
 				//     The callback method that will be invoked.
-				void RegisterCallbackForPinValueChangedEvent(int pinNumber, PinEventTypes eventTypes, PinChangeEventHandler callback);
+				//void RegisterCallbackForPinValueChangedEvent(int pinNumber, PinEventTypes eventTypes, PinChangeEventHandler callback);
 				//
 				// Summary:
 				//     Sets the mode to a pin.
@@ -180,7 +202,7 @@ namespace System
 				//
 				//   callback:
 				//     The callback method that will be invoked.
-				void UnregisterCallbackForPinValueChangedEvent(int pinNumber, PinChangeEventHandler callback);
+				//void UnregisterCallbackForPinValueChangedEvent(int pinNumber, PinChangeEventHandler callback);
 				//
 				// Summary:
 				//     Blocks execution until an event of type eventType is received or a cancellation
@@ -198,7 +220,7 @@ namespace System
 				//
 				// Returns:
 				//     A structure that contains the result of the waiting operation.
-				WaitForEventResult WaitForEvent(int pinNumber, PinEventTypes eventTypes, CancellationToken cancellationToken);
+				//WaitForEventResult WaitForEvent(int pinNumber, PinEventTypes eventTypes, CancellationToken cancellationToken);
 				//
 				// Summary:
 				//     Blocks execution until an event of type eventType is received or a period of
@@ -216,7 +238,7 @@ namespace System
 				//
 				// Returns:
 				//     A structure that contains the result of the waiting operation.
-				WaitForEventResult WaitForEvent(int pinNumber, PinEventTypes eventTypes, TimeSpan timeout);
+				//WaitForEventResult WaitForEvent(int pinNumber, PinEventTypes eventTypes, TimeSpan timeout);
 				//
 				// Summary:
 				//     Async call until an event of type eventType is received or a cancellation is
@@ -235,7 +257,7 @@ namespace System
 				// Returns:
 				//     A task representing the operation of getting the structure that contains the
 				//     result of the waiting operation
-				ValueTask<WaitForEventResult> WaitForEventAsync(int pinNumber, PinEventTypes eventTypes, CancellationToken token);
+				//ValueTask<WaitForEventResult> WaitForEventAsync(int pinNumber, PinEventTypes eventTypes, CancellationToken token);
 				//
 				// Summary:
 				//     Async call to wait until an event of type eventType is received or a period of
@@ -254,7 +276,7 @@ namespace System
 				// Returns:
 				//     A task representing the operation of getting the structure that contains the
 				//     result of the waiting operation.
-				ValueTask<WaitForEventResult> WaitForEventAsync(int pinNumber, PinEventTypes eventTypes, TimeSpan timeout);
+				//ValueTask<WaitForEventResult> WaitForEventAsync(int pinNumber, PinEventTypes eventTypes, TimeSpan timeout);
 				//
 				// Summary:
 				//     Writes a value to a pin.
@@ -265,7 +287,10 @@ namespace System
 				//
 				//   value:
 				//     The value to be written to the pin.
-				void Write(int pinNumber, PinValue value);
+				inline void Write(int pinNumber, PinValue value)
+				{
+
+				}
 				//
 				// Summary:
 				//     Write the given pins with the given values.
@@ -273,7 +298,7 @@ namespace System
 				// Parameters:
 				//   pinValuePairs:
 				//     The pin/value pairs to write.
-				void Write(ReadOnlySpan<PinValuePair> pinValuePairs);
+				//void Write(ReadOnlySpan<PinValuePair> pinValuePairs);
 			};
 		}
 	}
