@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.0</TargetFramework>
     <ApplicationIcon>ctranslate_thumbnail_pYZ_icon.ico</ApplicationIcon>
     <Version>0.6.0</Version>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
@@ -15,11 +15,13 @@
     <Authors>Jensen Miller</Authors>
     <Company>null</Company>
     <Product>C# C++ Translator</Product>
+    <StartupObject>CsCppTranslator.Program</StartupObject>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>C:\Users\mille\GitHub\jensen-miller\CSharp-Cpp-Translator\bin\</OutputPath>
     <NoWarn>1701;1702;1305</NoWarn>
+    <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>

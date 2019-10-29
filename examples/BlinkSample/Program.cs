@@ -10,9 +10,9 @@ namespace BlinkSample
     {                
         public static void Main()
         {
-            const int LedPin = 17;
+            const int LedPin = 13;
             const int LightTimeInMilliseconds = 1000;
-            const int DimTimeInMilliseconds = 200;
+            const int DimTimeInMilliseconds = 300;
 
             //  Get an instance of the GPIO controller
             GpioController controller = new GpioController();

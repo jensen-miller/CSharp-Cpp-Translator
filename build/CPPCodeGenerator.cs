@@ -42,14 +42,14 @@ namespace CsCppTranslator
         public const string POINTER_SYM = "*";
 
         SymbolTable symbolTable = null;
+        TypeSystem typeSystem = null;
 
         private int indentationCount = 0;
 
         private StringBuilder DynamicAllocation(TypeSyntax typeId, ArgumentListSyntax ctorArgs)
         {
-
             return new StringBuilder().AppendFormat(
-                "{0} {1}({2})",
+                "*{0} {1}({2})",
                 NEW_KEYWORD,
                 typeId.Accept(this),
                 ctorArgs.Accept(this)
@@ -59,6 +59,7 @@ namespace CsCppTranslator
         protected CPPCodeGenerator()
         {
             symbolTable = new SymbolTable();
+            typeSystem = new TypeSystem();
         }
 
         public static StringBuilder GenerateCode(CSharpSyntaxNode syntaxNode)
@@ -1351,10 +1352,16 @@ namespace CsCppTranslator
         public override StringBuilder VisitVariableDeclaration(VariableDeclarationSyntax node)
         {
             StringBuilder variable_instances = new StringBuilder();
+            string modifier = "&";
+            if (typeSystem.IsPrimitiveType(node.Type, this))
+            {
+                modifier = "";
+            }
             foreach(var variable in node.Variables)
             {
                 variable_instances.AppendFormat(
-                    "{0}, ",
+                    "{0}{1}, ",
+                    modifier,
                     variable.Accept(this)
                 );
             }
