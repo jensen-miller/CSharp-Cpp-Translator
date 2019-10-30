@@ -27,4 +27,4 @@ intermediate editing.
 3. Select 'Console App (.NET Core)' template
 
 
-![](graphics/dotnet-core-teplate.png)
+![](graphics/dotnet-core-template.png)
