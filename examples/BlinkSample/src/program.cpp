@@ -30,9 +30,7 @@ namespace BlinkSample
 
 
 
-void setup() {
+int main()
+{
 	BlinkSample::Program::Main();
-}
-
-void loop() {
 }
