@@ -22,3 +22,9 @@ intermediate editing.
 
 
 ![](graphics/create-new-project.png)
+
+
+3. Select 'Console App (.NET Core)' template
+
+
+![](graphics/dotnet-core-teplate.png)
