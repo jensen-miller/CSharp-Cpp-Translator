@@ -19,4 +19,6 @@ intermediate editing.
 
 1. Open Visual Studio
 2. Create New Project
+
+
 ![](graphics/create-new-project.png)
