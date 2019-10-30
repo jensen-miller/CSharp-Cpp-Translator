@@ -3,20 +3,20 @@
  *
  *  License: The GNU License
  *  
- *  This file is part of IoTDotNet.
+ *  This file is part of CS-CPP-Translator.
  *
- *  IoTDotNet is free software: you can redistribute it and/or modify
+ *  CS-CPP-Translator is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  IoTDotNet is distributed in the hope that it will be useful,
+ *  CS-CPP-Translator is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with IoTDotNet.  If not, see <https://www.gnu.org/licenses/>.
+ *  along with CS-CPP-Translator.  If not, see <https://www.gnu.org/licenses/>.
  *****************************************************************************/
 
 using System;
@@ -78,14 +78,14 @@ namespace CsCppTranslator
                 StringBuilder sourceCode = CPPCodeGenerator.GenerateCode(rootNode);
                 if (flags.ArduinoSketch)
                 {
-                    AddSketchEntry(sourceCode, "BlinkSample", "Program", "Main");
+                    AddSketch(sourceCode, "BlinkSample", "Program", "Main");
+                    System.IO.File.WriteAllText(projectDir + "\\src\\program.ino", sourceCode.ToString());
                 }
                 else
                 {
                     AddMainEntry(sourceCode, "BlinkSample", "Program", "Main");
+                    System.IO.File.WriteAllText(projectDir + "\\src\\program.cpp", sourceCode.ToString());
                 }                
-                System.IO.File.WriteAllText(projectDir + "\\src\\program.cpp", sourceCode.ToString());
-
             }
             else
             {
@@ -104,9 +104,9 @@ namespace CsCppTranslator
             );
         }
 
-        private static void AddSketchEntry(StringBuilder sb, string namespaceScope, string className, string entryFnName)
-        {
-            sb.AppendLine("\r\n\r\n");
+        private static void AddSketch(StringBuilder sb, string namespaceScope, string className, string entryFnName)
+        {            
+            sb.AppendLine("\r\n\r\n\r\n\r\n");
             sb.AppendFormat("void setup() {{\r\n\t{0}::{1}::{2}();\r\n}}\r\n",
                 namespaceScope,
                 className,

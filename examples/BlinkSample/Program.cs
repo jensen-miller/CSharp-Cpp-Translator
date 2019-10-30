@@ -3,7 +3,6 @@ using System.Threading;
 
 
 
-
 namespace BlinkSample
 {
     class Program

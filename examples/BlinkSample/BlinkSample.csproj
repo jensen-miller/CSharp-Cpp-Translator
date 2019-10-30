@@ -16,6 +16,10 @@
     <PackageReference Include="System.Device.Gpio" Version="1.0.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="src\" />
+  </ItemGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="..\..\publish\CS-CPP-Translator.exe .\ -z arduino" />
   </Target>
