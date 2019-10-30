@@ -27,6 +27,9 @@ namespace CsCppTranslator
         [Option('o', "output", Default = "a.out", HelpText ="Name of output file")]
         public string OutputFileName { get; set; }
 
+        [Option('z', "framework", Required = false, HelpText = "Chose a framework for the given project.")]
+        public string FrameworkName { get; set; }
+
 
         [Option(Default = false, HelpText = "Make the output pretty format")]
         public bool Pretty { get; set; }

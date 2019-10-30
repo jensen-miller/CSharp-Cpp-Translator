@@ -10,10 +10,10 @@ namespace BlinkSample
 		public:
 		static void Main()
 		{
-			const int LedPin = 17;
+			const int LedPin = 13;
 			const int LightTimeInMilliseconds = 1000;
-			const int DimTimeInMilliseconds = 200;
-			GpioController controller = new GpioController();
+			const int DimTimeInMilliseconds = 300;
+			 GpioController &controller = *new GpioController();
 			controller.OpenPin(LedPin, PinMode::Output);
 			while (true)
 			{

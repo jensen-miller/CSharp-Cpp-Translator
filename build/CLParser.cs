@@ -38,6 +38,11 @@ namespace CsCppTranslator
                         parsedFlags.Verbose = clArgs.Verbose;
                     }
 
+                    if (clArgs.FrameworkName.Contains("arduino"))
+                    {
+                        parsedFlags.ArduinoSketch = true;
+                    }
+
                     parsedFlags.GenerateOutput = clArgs.Compile;
                 }
             );

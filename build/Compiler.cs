@@ -33,6 +33,7 @@ namespace CsCppTranslator
     {
         private bool generateOutput;
         private bool verbose;
+        private bool arduinoSketch;
         public bool GenerateOutput {
             get { return generateOutput; }
             set { generateOutput = value; }
@@ -42,6 +43,12 @@ namespace CsCppTranslator
         {
             get { return verbose; }
             set { verbose = value; }
+        }
+
+        public bool ArduinoSketch
+        {
+            get { return arduinoSketch; }
+            set { arduinoSketch = value; }
         }
     }
 
@@ -69,7 +76,14 @@ namespace CsCppTranslator
             if (flags.GenerateOutput)
             {
                 StringBuilder sourceCode = CPPCodeGenerator.GenerateCode(rootNode);
-                AddMainEntry(sourceCode, "BlinkSample", "Program", "Main");
+                if (flags.ArduinoSketch)
+                {
+                    AddSketchEntry(sourceCode, "BlinkSample", "Program", "Main");
+                }
+                else
+                {
+                    AddMainEntry(sourceCode, "BlinkSample", "Program", "Main");
+                }                
                 System.IO.File.WriteAllText(projectDir + "\\src\\program.cpp", sourceCode.ToString());
 
             }
@@ -88,6 +102,17 @@ namespace CsCppTranslator
                 className,
                 entryFnName
             );
+        }
+
+        private static void AddSketchEntry(StringBuilder sb, string namespaceScope, string className, string entryFnName)
+        {
+            sb.AppendLine("\r\n\r\n");
+            sb.AppendFormat("void setup() {{\r\n\t{0}::{1}::{2}();\r\n}}\r\n",
+                namespaceScope,
+                className,
+                entryFnName
+            );
+            sb.Append("\r\nvoid loop() {\r\n}");
         }
         
 
