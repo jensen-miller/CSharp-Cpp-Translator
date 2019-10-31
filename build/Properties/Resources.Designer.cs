@@ -70,7 +70,7 @@ namespace CsCppTranslator.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to C# -&gt; C++ Translator [Version 0.6.0].
+        ///   Looks up a localized string similar to C# -&gt; C++ Translator [Version 0.7.0].
         /// </summary>
         internal static string CL_WELCOME {
             get {

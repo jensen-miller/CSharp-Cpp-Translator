@@ -3,20 +3,20 @@
  *
  *  License: The GNU License
  *  
- *  This file is part of IoTDotNet.
+ *  This file is part of CS-CPP-Translator.
  *
- *  IoTDotNet is free software: you can redistribute it and/or modify
+ *  CS-CPP-Translator is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
  *
- *  IoTDotNet is distributed in the hope that it will be useful,
+ *  CS-CPP-Translator is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
  *  You should have received a copy of the GNU General Public License
- *  along with IoTDotNet.  If not, see <https://www.gnu.org/licenses/>.
+ *  along with CS-CPP-Translator.  If not, see <https://www.gnu.org/licenses/>.
  *****************************************************************************/
 using System;
 
@@ -32,36 +32,76 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace CsCppTranslator
 {
+    /// <summary>
+    /// C++ code generator. Inherits CSharpSytaxVisitor interface.
+    /// </summary>
     internal class CPPCodeGenerator : CSharpSyntaxVisitor<StringBuilder>
     {
+        //
+        //  Constants
+        //  -------------------------------------------------------------------
+
+        /// <summary>The name of the header containing fundamentals.</summary>
+        public const string DOTNETIOT_HEADER_NAME = "dotnetiot";
+
+        /// <summary>include directive [PREPROCESSING]</summary>            
         public const string INCLUDE_DIRECTIVE = "#include";
+        /// <summary>define directive [PREPROCESSING]</summary>            
         public const string DEFINE_DIRECTIVE = "#define";
+        /// <summary>namespace [KEYWORD]</summary>
         public const string NAMESPACE_KEYWORD = "namespace";
+        /// <summary>new [KEYWORD]</summary>
         public const string NEW_KEYWORD = "new";
+        /// <summary>class [KEYWORD]</summary>
         public const string CLASS_KEYWORD = "class";
+        /// <summary>pointer [SYMBOL]</summary>
         public const string POINTER_SYM = "*";
 
-        SymbolTable symbolTable = null;
-        TypeSystem typeSystem = null;
 
+
+
+
+        //
+        //  Attributes
+        //  -------------------------------------------------------------------
         private int indentationCount = 0;
 
-        private StringBuilder DynamicAllocation(TypeSyntax typeId, ArgumentListSyntax ctorArgs)
-        {
-            return new StringBuilder().AppendFormat(
-                "*{0} {1}({2})",
-                NEW_KEYWORD,
-                typeId.Accept(this),
-                ctorArgs.Accept(this)
-            );
-        }
-        
+
+
+
+
+        //
+        //  Generator Utilities
+        //  -------------------------------------------------------------------
+        /// <summary>The symbol table.</summary>
+        SymbolTable symbolTable = null;
+
+        MetaCodeIterator metaCode = null;
+
+
+
+
+
+        //
+        //  Constructors
+        //  -------------------------------------------------------------------
+
+        /// <summary>
+        /// Protected c++ code generator constructor.
+        /// </summary>
         protected CPPCodeGenerator()
         {
             symbolTable = new SymbolTable();
-            typeSystem = new TypeSystem();
+            metaCode = new MetaCodeIterator();
         }
 
+
+
+        /// <summary>
+        /// Entry point for code generation.
+        /// </summary>
+        /// <param name="syntaxNode"></param>
+        /// <returns></returns>
         public static StringBuilder GenerateCode(CSharpSyntaxNode syntaxNode)
         {
             CPPCodeGenerator newCodeGenerator = new CPPCodeGenerator();
@@ -73,6 +113,37 @@ namespace CsCppTranslator
 
 
 
+
+
+
+        //
+        //  Dynamic Memory Translating
+        //  -------------------------------------------------------------------
+
+        /// <summary>
+        /// Dynamic allocation syntax translation.
+        /// </summary>
+        /// <param name="typeId"></param>
+        /// <param name="ctorArgs"></param>
+        /// <returns></returns>
+        private StringBuilder DynamicAllocation(TypeSyntax typeId, ArgumentListSyntax ctorArgs)
+        {
+            return new StringBuilder().AppendFormat(
+                "*{0} {1}({2})",
+                NEW_KEYWORD,
+                typeId.Accept(this),
+                ctorArgs.Accept(this)
+            );
+        }
+
+
+
+
+
+        //
+        //  Visitors
+        //  -------------------------------------------------------------------
+
         /// <summary>
         /// Entry of compilation unit.
         /// </summary>
@@ -80,6 +151,10 @@ namespace CsCppTranslator
         public override StringBuilder VisitCompilationUnit(CompilationUnitSyntax node)
         {
             StringBuilder fileBuilder = new StringBuilder();
+            fileBuilder.AppendFormat("{0} <{1}.h>\r\n\r\n",
+                INCLUDE_DIRECTIVE,
+                DOTNETIOT_HEADER_NAME
+            );
             foreach (UsingDirectiveSyntax usingDirSyn in node.Usings)
             {
                 fileBuilder.Append(usingDirSyn.Accept(this));
@@ -119,6 +194,13 @@ namespace CsCppTranslator
             return new StringBuilder().Append(node.Identifier.Value);
         }
 
+
+
+        /// <summary>
+        /// Indent for pretty-printing. [stateful]
+        /// </summary>
+        /// <param name="increment">Whether to increment after indentation.</param>
+        /// <returns>A string representing the amount of indentation.</returns>
         private string Indent(bool increment=false)
         {
             string result = String.Concat(Enumerable.Repeat("\t", indentationCount));
@@ -176,13 +258,17 @@ namespace CsCppTranslator
         /// <returns></returns>
         public override StringBuilder VisitClassDeclaration(ClassDeclarationSyntax node)
         {
-            return new StringBuilder().AppendFormat(
+            string alreadyDefiningClass = metaCode.DefiningClass;
+            metaCode.DefiningClass = node.Identifier.ValueText;
+            StringBuilder classBuilder = new StringBuilder().AppendFormat(
                 "{0} {1}\r\n{2}{{\r\n{3}{2}}};\r\n",                
                 CLASS_KEYWORD,
                 node.Identifier.ValueText,
                 Indent(),
                 VisitEachMemberDeclarations(node.Members)
                 );
+            metaCode.DefiningClass = alreadyDefiningClass;
+            return classBuilder;
         }
 
 
@@ -194,7 +280,9 @@ namespace CsCppTranslator
         /// <returns></returns>
         public override StringBuilder VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            return new StringBuilder().AppendFormat(
+            string alreadyDefiningMethod = metaCode.DefiningFunction;
+            metaCode.DefiningFunction = node.Identifier.ValueText;
+            StringBuilder methodBuilder = new StringBuilder().AppendFormat(
                 "{0} {1} {2}({3})\r\n{4}{{\r\n{5}{4}}}\r\n",
                 ProcessMethodModifiers(node.Modifiers),
                 node.ReturnType.Accept(this),
@@ -202,9 +290,18 @@ namespace CsCppTranslator
                 node.ParameterList.Accept(this),
                 Indent(),
                 node.Body.Accept(this)
-                );
+            );
+            metaCode.DefiningFunction = alreadyDefiningMethod;
+            return methodBuilder;
         }
 
+        
+        
+        /// <summary>
+        /// Process all modifiers prior to the variable/declaration.
+        /// </summary>
+        /// <param name="syntaxTokens">A list of modifiers.</param>
+        /// <returns></returns>
         private StringBuilder ProcessMethodModifiers(SyntaxTokenList syntaxTokens)
         {
             StringBuilder modifierBuilder = new StringBuilder();
@@ -223,10 +320,10 @@ namespace CsCppTranslator
                         modifierBuilder.Insert(0, "protected:\r\n" + Indent());
                         break;
                     case SyntaxKind.StaticKeyword:
-                        modifierBuilder.Append("static");
+                        modifierBuilder.Append("static ");
                         break;
                     case SyntaxKind.ConstKeyword:
-                        modifierBuilder.Append("const");
+                        modifierBuilder.Append("const ");
                         break;
                     default:
                         break;
@@ -295,6 +392,7 @@ namespace CsCppTranslator
         public override StringBuilder VisitBlock(BlockSyntax node)
         {
             StringBuilder blockBuilder = new StringBuilder();
+            metaCode.IncrementBlockIndex();
             indentationCount++;
             foreach (var statement in node.Statements)
             {
@@ -302,7 +400,9 @@ namespace CsCppTranslator
                 blockBuilder.Append(statement.Accept(this));
                 blockBuilder.AppendLine();
             }
+            symbolTable.CollectGarbage(metaCode, blockBuilder);
             indentationCount--;
+            metaCode.DecrementBlockIndex();
             return blockBuilder;
         }
 
@@ -361,7 +461,7 @@ namespace CsCppTranslator
 
             //  If the object to the left is static, use static
             //  scoping rather than instance scoping.
-            if (symbolTable.ContainsSymbol(leftObject.ToString()))
+            if (symbolTable.IsStaticClass(leftObject.ToString()))
                 scope_char = "::";
 
 
@@ -418,6 +518,129 @@ namespace CsCppTranslator
             return new StringBuilder(node.Token.Text);
         }
 
+
+
+        /// <summary>
+        /// While statement.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public override StringBuilder VisitWhileStatement(WhileStatementSyntax node)
+        {
+            return new StringBuilder().AppendFormat(
+                "{0} ({1})\r\n{2}{{\r\n{3}{2}}}",
+                node.WhileKeyword.Value,
+                node.Condition.Accept(this),
+                Indent(),
+                node.Statement.Accept(this)
+            );
+        }
+
+
+        /// <summary>
+        /// '= [value]' clause.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public override StringBuilder VisitEqualsValueClause(EqualsValueClauseSyntax node)
+        {
+            if (node.Value is IdentifierNameSyntax)
+            {
+                symbolTable.ReferenceIdentifier((IdentifierNameSyntax)node.Value, metaCode);
+            }
+            //    symbolTable.ReferenceIdentifier(node.Value, this);
+            return new StringBuilder().AppendFormat(
+                "{0} {1}",
+                node.EqualsToken.Value,
+                node.Value.Accept(this)
+            );
+        }
+
+
+
+        /// <summary>
+        /// Field of a structure or class.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public override StringBuilder VisitFieldDeclaration(FieldDeclarationSyntax node)
+        {
+            return new StringBuilder().AppendFormat(
+                "{0} {1}\r\n",
+                ProcessMethodModifiers(node.Modifiers),
+                node.Declaration.Accept(this)
+            );
+        }
+
+
+
+        /// <summary>
+        /// Variable Declarations.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public override StringBuilder VisitVariableDeclaration(VariableDeclarationSyntax node)
+        {
+            StringBuilder variable_instances = new StringBuilder();
+            string modifier = "&";
+            if (TypeSystem.IsBuiltinType(node.Type, this))
+            {
+                modifier = "";
+            }
+            foreach (var variable in node.Variables)
+            {
+                symbolTable.DeclareVariable(node.Type, variable);
+                variable_instances.AppendFormat(
+                    "{0}{1}, ",
+                    modifier,
+                    variable.Accept(this)
+                );
+            }
+            variable_instances.Remove(variable_instances.Length - 2, 2);
+            return new StringBuilder().AppendFormat(
+                "{0} {1};",
+                node.Type.Accept(this),
+                variable_instances
+            );
+        }
+
+
+
+        /// <summary>
+        /// Variable declarator.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public override StringBuilder VisitVariableDeclarator(VariableDeclaratorSyntax node)
+        {
+            return new StringBuilder().AppendFormat(
+                "{0} {1}",
+                node.Identifier.Value,
+                node.Initializer.Accept(this)
+            );
+        }
+
+        /// <summary>
+        /// Dynamic Object creation.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public override StringBuilder VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+        {
+            //  Route to Dynamic allocation function for better specialization.
+            return new StringBuilder().AppendFormat(
+                "{0}",
+                DynamicAllocation(node.Type, node.ArgumentList)
+            );
+        }
+
+
+
+        //
+        //---------------------------------------------------------------------------------------------------------------------
+        //      Unimplemented
+        //---------------------------------------------------------------------------------------------------------------------
+        //
 
 
 
@@ -754,15 +977,6 @@ namespace CsCppTranslator
             return base.VisitEnumMemberDeclaration(node);
         }
 
-        public override StringBuilder VisitEqualsValueClause(EqualsValueClauseSyntax node)
-        {
-            return new StringBuilder().AppendFormat(
-                "{0} {1}",
-                node.EqualsToken.Value,
-                node.Value.Accept(this)
-            );
-        }
-
         public override StringBuilder VisitErrorDirectiveTrivia(ErrorDirectiveTriviaSyntax node)
         {
             return base.VisitErrorDirectiveTrivia(node);
@@ -788,14 +1002,7 @@ namespace CsCppTranslator
             return base.VisitExternAliasDirective(node);
         }
 
-        public override StringBuilder VisitFieldDeclaration(FieldDeclarationSyntax node)
-        {
-            return new StringBuilder().AppendFormat(
-                "{0} {1}\r\n",
-                ProcessMethodModifiers(node.Modifiers),                
-                node.Declaration.Accept(this)
-            );
-        }
+
 
         public override StringBuilder VisitFinallyClause(FinallyClauseSyntax node)
         {
@@ -964,7 +1171,7 @@ namespace CsCppTranslator
         public override StringBuilder VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node)
         {
             return new StringBuilder().AppendFormat(
-                "{0} {1}",
+                "{0}{1}",
                 ProcessMethodModifiers(node.Modifiers),
                 node.Declaration.Accept(this)
             );
@@ -1015,21 +1222,6 @@ namespace CsCppTranslator
         public override StringBuilder VisitNullableType(NullableTypeSyntax node)
         {
             return base.VisitNullableType(node);
-        }
-
-
-
-        /// <summary>
-        /// Dynamic Object creation.
-        /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        public override StringBuilder VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
-        {
-            return new StringBuilder().AppendFormat(
-                "{0}",
-                DynamicAllocation(node.Type, node.ArgumentList)
-            );
         }
 
         public override StringBuilder VisitOmittedArraySizeExpression(OmittedArraySizeExpressionSyntax node)
@@ -1349,39 +1541,6 @@ namespace CsCppTranslator
             return base.VisitUsingStatement(node);
         }
 
-        public override StringBuilder VisitVariableDeclaration(VariableDeclarationSyntax node)
-        {
-            StringBuilder variable_instances = new StringBuilder();
-            string modifier = "&";
-            if (typeSystem.IsPrimitiveType(node.Type, this))
-            {
-                modifier = "";
-            }
-            foreach(var variable in node.Variables)
-            {
-                variable_instances.AppendFormat(
-                    "{0}{1}, ",
-                    modifier,
-                    variable.Accept(this)
-                );
-            }
-            variable_instances.Remove(variable_instances.Length-2, 2);
-            return new StringBuilder().AppendFormat(
-                "{0} {1};",                
-                node.Type.Accept(this),
-                variable_instances
-            );
-        }
-
-        public override StringBuilder VisitVariableDeclarator(VariableDeclaratorSyntax node)
-        {
-            return new StringBuilder().AppendFormat(
-                "{0} {1}",
-                node.Identifier.Value,
-                node.Initializer.Accept(this)
-            );
-        }
-
         public override StringBuilder VisitVarPattern(VarPatternSyntax node)
         {
             return base.VisitVarPattern(node);
@@ -1400,17 +1559,6 @@ namespace CsCppTranslator
         public override StringBuilder VisitWhereClause(WhereClauseSyntax node)
         {
             return base.VisitWhereClause(node);
-        }
-
-        public override StringBuilder VisitWhileStatement(WhileStatementSyntax node)
-        {
-            return new StringBuilder().AppendFormat(
-                "{0} ({1})\r\n{2}{{\r\n{3}{2}}}",
-                node.WhileKeyword.Value,
-                node.Condition.Accept(this),
-                Indent(),
-                node.Statement.Accept(this)
-            );
         }
 
         public override StringBuilder VisitXmlCDataSection(XmlCDataSectionSyntax node)

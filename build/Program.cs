@@ -40,7 +40,15 @@ namespace CsCppTranslator
             Console.WriteLine(Properties.Resources.CL_WELCOME);
             Console.WriteLine(Properties.Resources.CL_COPYRIGHT);
 
-            string projectSourceDirectory = args[0];
+            string projectSourceDirectory;
+            if (args.Length > 0)
+            {
+                projectSourceDirectory = args[0];
+            }
+            else
+            {
+                projectSourceDirectory = Directory.GetCurrentDirectory();
+            }
 
             compilerFlags = CLParser.Parse(args, ref projectSourceDirectory);
             
