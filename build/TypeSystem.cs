@@ -28,18 +28,35 @@ namespace CsCppTranslator
 {
     class TypeSystem
     {
-        static private List<string> primitiveTypes = new List<string>
+        private static List<string> builtinTypes = new List<string>
         {
-            "int",
             "bool",
+            "char",
+            "unsigned char",
+            "signed char",
+            "int",
+            "unsigned int",
+            "signed int",
+            "short",
+            "unsigned short",
+            "signed short",
             "float",
             "double",
-            "char"
         };
-        public bool IsPrimitiveType(TypeSyntax typeSyntax, CPPCodeGenerator generator)
+
+
+
+
+        /// <summary>
+        /// Determines if the provided type is a C++ built-in type.
+        /// </summary>
+        /// <param name="typeSyntax"></param>
+        /// <param name="generator"></param>
+        /// <returns></returns>
+        public static bool IsBuiltinType(TypeSyntax typeSyntax, CPPCodeGenerator generator)
         {
             string type_name = typeSyntax.Accept(generator).ToString();
-            return primitiveTypes.Contains(type_name);            
+            return builtinTypes.Contains(type_name);            
         }
     }
 }

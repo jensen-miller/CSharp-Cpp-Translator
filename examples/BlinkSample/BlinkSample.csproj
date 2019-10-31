@@ -5,9 +5,14 @@
     <TargetFramework>netcoreapp3.0</TargetFramework>
     <ApplicationIcon />
     <StartupObject />
+    <Platforms>AnyCPU;x86</Platforms>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <PlatformTarget>x86</PlatformTarget>
   </PropertyGroup>
 
@@ -16,12 +21,8 @@
     <PackageReference Include="System.Device.Gpio" Version="1.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="src\" />
-  </ItemGroup>
-
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="..\..\publish\CS-CPP-Translator.exe .\ -z arduino" />
+    <Exec Command="CS-CPP-Translator ./ -z arduino" />
   </Target>
 
 </Project>

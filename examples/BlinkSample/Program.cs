@@ -11,10 +11,10 @@ namespace BlinkSample
         {
             const int LedPin = 13;
             const int LightTimeInMilliseconds = 1000;
-            const int DimTimeInMilliseconds = 300;
+            const int DimTimeInMilliseconds = 1000;
 
             //  Get an instance of the GPIO controller
-            GpioController controller = new GpioController();
+            GpioController controller = new GpioController();            
 
             //  Open the pin for IO
             controller.OpenPin(LedPin, PinMode.Output);

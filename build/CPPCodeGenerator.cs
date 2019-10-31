@@ -41,6 +41,9 @@ namespace CsCppTranslator
         //  Constants
         //  -------------------------------------------------------------------
 
+        /// <summary>The name of the header containing fundamentals.</summary>
+        public const string DOTNETIOT_HEADER_NAME = "dotnetiot";
+
         /// <summary>include directive [PREPROCESSING]</summary>            
         public const string INCLUDE_DIRECTIVE = "#include";
         /// <summary>define directive [PREPROCESSING]</summary>            
@@ -70,8 +73,44 @@ namespace CsCppTranslator
         //
         //  Generator Utilities
         //  -------------------------------------------------------------------
+        /// <summary>The symbol table.</summary>
         SymbolTable symbolTable = null;
-        TypeSystem typeSystem = null;
+
+        MetaCodeIterator metaCode = null;
+
+
+
+
+
+        //
+        //  Constructors
+        //  -------------------------------------------------------------------
+
+        /// <summary>
+        /// Protected c++ code generator constructor.
+        /// </summary>
+        protected CPPCodeGenerator()
+        {
+            symbolTable = new SymbolTable();
+            metaCode = new MetaCodeIterator();
+        }
+
+
+
+        /// <summary>
+        /// Entry point for code generation.
+        /// </summary>
+        /// <param name="syntaxNode"></param>
+        /// <returns></returns>
+        public static StringBuilder GenerateCode(CSharpSyntaxNode syntaxNode)
+        {
+            CPPCodeGenerator newCodeGenerator = new CPPCodeGenerator();
+            newCodeGenerator.symbolTable.AddStaticObjectIdentifier("Thread");
+            newCodeGenerator.symbolTable.AddStaticObjectIdentifier("PinMode");
+            newCodeGenerator.symbolTable.AddStaticObjectIdentifier("PinValue");
+            return syntaxNode.Accept(newCodeGenerator);            
+        }
+
 
 
 
@@ -97,51 +136,6 @@ namespace CsCppTranslator
             );
         }
 
-        /// <summary>
-        /// Dynamic Object creation.
-        /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        public override StringBuilder VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
-        {
-            return new StringBuilder().AppendFormat(
-                "{0}",
-                DynamicAllocation(node.Type, node.ArgumentList)
-            );
-        }
-
-
-
-
-
-        //
-        //  Constructors
-        //  -------------------------------------------------------------------
-
-        /// <summary>
-        /// Protected c++ code generator constructor.
-        /// </summary>
-        protected CPPCodeGenerator()
-        {
-            symbolTable = new SymbolTable();
-            typeSystem = new TypeSystem();
-        }
-
-
-
-        /// <summary>
-        /// Entry point for code generation.
-        /// </summary>
-        /// <param name="syntaxNode"></param>
-        /// <returns></returns>
-        public static StringBuilder GenerateCode(CSharpSyntaxNode syntaxNode)
-        {
-            CPPCodeGenerator newCodeGenerator = new CPPCodeGenerator();
-            newCodeGenerator.symbolTable.AddStaticObjectIdentifier("Thread");
-            newCodeGenerator.symbolTable.AddStaticObjectIdentifier("PinMode");
-            newCodeGenerator.symbolTable.AddStaticObjectIdentifier("PinValue");
-            return syntaxNode.Accept(newCodeGenerator);            
-        }
 
 
 
@@ -157,6 +151,10 @@ namespace CsCppTranslator
         public override StringBuilder VisitCompilationUnit(CompilationUnitSyntax node)
         {
             StringBuilder fileBuilder = new StringBuilder();
+            fileBuilder.AppendFormat("{0} <{1}.h>\r\n\r\n",
+                INCLUDE_DIRECTIVE,
+                DOTNETIOT_HEADER_NAME
+            );
             foreach (UsingDirectiveSyntax usingDirSyn in node.Usings)
             {
                 fileBuilder.Append(usingDirSyn.Accept(this));
@@ -260,13 +258,17 @@ namespace CsCppTranslator
         /// <returns></returns>
         public override StringBuilder VisitClassDeclaration(ClassDeclarationSyntax node)
         {
-            return new StringBuilder().AppendFormat(
+            string alreadyDefiningClass = metaCode.DefiningClass;
+            metaCode.DefiningClass = node.Identifier.ValueText;
+            StringBuilder classBuilder = new StringBuilder().AppendFormat(
                 "{0} {1}\r\n{2}{{\r\n{3}{2}}};\r\n",                
                 CLASS_KEYWORD,
                 node.Identifier.ValueText,
                 Indent(),
                 VisitEachMemberDeclarations(node.Members)
                 );
+            metaCode.DefiningClass = alreadyDefiningClass;
+            return classBuilder;
         }
 
 
@@ -278,7 +280,9 @@ namespace CsCppTranslator
         /// <returns></returns>
         public override StringBuilder VisitMethodDeclaration(MethodDeclarationSyntax node)
         {
-            return new StringBuilder().AppendFormat(
+            string alreadyDefiningMethod = metaCode.DefiningFunction;
+            metaCode.DefiningFunction = node.Identifier.ValueText;
+            StringBuilder methodBuilder = new StringBuilder().AppendFormat(
                 "{0} {1} {2}({3})\r\n{4}{{\r\n{5}{4}}}\r\n",
                 ProcessMethodModifiers(node.Modifiers),
                 node.ReturnType.Accept(this),
@@ -286,7 +290,9 @@ namespace CsCppTranslator
                 node.ParameterList.Accept(this),
                 Indent(),
                 node.Body.Accept(this)
-                );
+            );
+            metaCode.DefiningFunction = alreadyDefiningMethod;
+            return methodBuilder;
         }
 
         
@@ -314,10 +320,10 @@ namespace CsCppTranslator
                         modifierBuilder.Insert(0, "protected:\r\n" + Indent());
                         break;
                     case SyntaxKind.StaticKeyword:
-                        modifierBuilder.Append("static");
+                        modifierBuilder.Append("static ");
                         break;
                     case SyntaxKind.ConstKeyword:
-                        modifierBuilder.Append("const");
+                        modifierBuilder.Append("const ");
                         break;
                     default:
                         break;
@@ -386,6 +392,7 @@ namespace CsCppTranslator
         public override StringBuilder VisitBlock(BlockSyntax node)
         {
             StringBuilder blockBuilder = new StringBuilder();
+            metaCode.IncrementBlockIndex();
             indentationCount++;
             foreach (var statement in node.Statements)
             {
@@ -393,7 +400,9 @@ namespace CsCppTranslator
                 blockBuilder.Append(statement.Accept(this));
                 blockBuilder.AppendLine();
             }
+            symbolTable.CollectGarbage(metaCode, blockBuilder);
             indentationCount--;
+            metaCode.DecrementBlockIndex();
             return blockBuilder;
         }
 
@@ -452,7 +461,7 @@ namespace CsCppTranslator
 
             //  If the object to the left is static, use static
             //  scoping rather than instance scoping.
-            if (symbolTable.ContainsSymbol(leftObject.ToString()))
+            if (symbolTable.IsStaticClass(leftObject.ToString()))
                 scope_char = "::";
 
 
@@ -535,6 +544,11 @@ namespace CsCppTranslator
         /// <returns></returns>
         public override StringBuilder VisitEqualsValueClause(EqualsValueClauseSyntax node)
         {
+            if (node.Value is IdentifierNameSyntax)
+            {
+                symbolTable.ReferenceIdentifier((IdentifierNameSyntax)node.Value, metaCode);
+            }
+            //    symbolTable.ReferenceIdentifier(node.Value, this);
             return new StringBuilder().AppendFormat(
                 "{0} {1}",
                 node.EqualsToken.Value,
@@ -569,12 +583,13 @@ namespace CsCppTranslator
         {
             StringBuilder variable_instances = new StringBuilder();
             string modifier = "&";
-            if (typeSystem.IsPrimitiveType(node.Type, this))
+            if (TypeSystem.IsBuiltinType(node.Type, this))
             {
                 modifier = "";
             }
             foreach (var variable in node.Variables)
             {
+                symbolTable.DeclareVariable(node.Type, variable);
                 variable_instances.AppendFormat(
                     "{0}{1}, ",
                     modifier,
@@ -602,6 +617,20 @@ namespace CsCppTranslator
                 "{0} {1}",
                 node.Identifier.Value,
                 node.Initializer.Accept(this)
+            );
+        }
+
+        /// <summary>
+        /// Dynamic Object creation.
+        /// </summary>
+        /// <param name="node"></param>
+        /// <returns></returns>
+        public override StringBuilder VisitObjectCreationExpression(ObjectCreationExpressionSyntax node)
+        {
+            //  Route to Dynamic allocation function for better specialization.
+            return new StringBuilder().AppendFormat(
+                "{0}",
+                DynamicAllocation(node.Type, node.ArgumentList)
             );
         }
 
@@ -1142,7 +1171,7 @@ namespace CsCppTranslator
         public override StringBuilder VisitLocalDeclarationStatement(LocalDeclarationStatementSyntax node)
         {
             return new StringBuilder().AppendFormat(
-                "{0} {1}",
+                "{0}{1}",
                 ProcessMethodModifiers(node.Modifiers),
                 node.Declaration.Accept(this)
             );

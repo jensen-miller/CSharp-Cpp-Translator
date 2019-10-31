@@ -72,17 +72,18 @@ namespace CsCppTranslator
 
             //  Generate output or serialize compile unit
             //
-            System.IO.Directory.CreateDirectory(projectDir + "\\src");
             if (flags.GenerateOutput)
             {
                 StringBuilder sourceCode = CPPCodeGenerator.GenerateCode(rootNode);
                 if (flags.ArduinoSketch)
                 {
+                    System.IO.Directory.CreateDirectory(projectDir + "\\arduino\\program");
                     AddSketch(sourceCode, "BlinkSample", "Program", "Main");
-                    System.IO.File.WriteAllText(projectDir + "\\src\\program.ino", sourceCode.ToString());
+                    System.IO.File.WriteAllText(projectDir + "\\arduino\\program\\program.ino", sourceCode.ToString());
                 }
                 else
                 {
+                    System.IO.Directory.CreateDirectory(projectDir + "\\src");
                     AddMainEntry(sourceCode, "BlinkSample", "Program", "Main");
                     System.IO.File.WriteAllText(projectDir + "\\src\\program.cpp", sourceCode.ToString());
                 }                
